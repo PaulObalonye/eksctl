@@ -14,11 +14,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudtrail/cloudtrailiface"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/aws/aws-sdk-go/service/eks/eksiface"
-	"github.com/aws/aws-sdk-go/service/iam/iamiface"
 	"github.com/kris-nova/logger"
 	"github.com/pkg/errors"
 
 	api "github.com/weaveworks/eksctl/pkg/apis/eksctl.io/v1alpha5"
+	"github.com/weaveworks/eksctl/pkg/awsapi"
 	"github.com/weaveworks/eksctl/pkg/cfn/builder"
 	"github.com/weaveworks/eksctl/pkg/cfn/waiter"
 	"github.com/weaveworks/eksctl/pkg/version"
@@ -69,7 +69,7 @@ type StackCollection struct {
 	cloudformationAPI cloudformationiface.CloudFormationAPI
 	ec2API            ec2iface.EC2API
 	eksAPI            eksiface.EKSAPI
-	iamAPI            iamiface.IAMAPI
+	iamAPI            awsapi.IAM
 	cloudTrailAPI     cloudtrailiface.CloudTrailAPI
 	asgAPI            autoscalingiface.AutoScalingAPI
 	spec              *api.ClusterConfig

@@ -7,12 +7,11 @@ import (
 	"os"
 	"time"
 
+	"github.com/aws/aws-sdk-go/service/elb/elbiface"
+	"github.com/aws/aws-sdk-go/service/elbv2/elbv2iface"
+
 	"github.com/gofrs/flock"
 	"github.com/spf13/afero"
-
-	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
-
-	"github.com/aws/aws-sdk-go/service/cloudwatchlogs/cloudwatchlogsiface"
 
 	stsv2 "github.com/aws/aws-sdk-go-v2/service/sts"
 
@@ -29,12 +28,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudformation/cloudformationiface"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
 	"github.com/aws/aws-sdk-go/service/cloudtrail/cloudtrailiface"
+	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go/service/cloudwatchlogs/cloudwatchlogsiface"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	awseks "github.com/aws/aws-sdk-go/service/eks"
 	"github.com/aws/aws-sdk-go/service/eks/eksiface"
-	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/aws/aws-sdk-go/service/iam/iamiface"
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/aws/aws-sdk-go/service/sts/stsiface"
 	"github.com/kris-nova/logger"
@@ -75,13 +74,14 @@ type KubeProvider interface {
 
 // ProviderServices stores the used APIs
 type ProviderServices struct {
-	spec *api.ProviderConfig
-	cfn  cloudformationiface.CloudFormationAPI
-	asg  autoscalingiface.AutoScalingAPI
-	eks  eksiface.EKSAPI
-	ec2  ec2iface.EC2API
-	sts  stsiface.STSAPI
-	iam  iamiface.IAMAPI
+	spec  *api.ProviderConfig
+	cfn   cloudformationiface.CloudFormationAPI
+	asg   autoscalingiface.AutoScalingAPI
+	eks   eksiface.EKSAPI
+	ec2   ec2iface.EC2API
+	elb   elbiface.ELBAPI
+	elbv2 elbv2iface.ELBV2API
+	sts   stsiface.STSAPI
 
 	cloudtrail     cloudtrailiface.CloudTrailAPI
 	cloudwatchlogs cloudwatchlogsiface.CloudWatchLogsAPI
@@ -113,9 +113,6 @@ func (p ProviderServices) EC2() ec2iface.EC2API { return p.ec2 }
 
 // STS returns a representation of the STS API
 func (p ProviderServices) STS() stsiface.STSAPI { return p.sts }
-
-// IAM returns a representation of the IAM API
-func (p ProviderServices) IAM() iamiface.IAMAPI { return p.iam }
 
 // CloudTrail returns a representation of the CloudTrail API
 func (p ProviderServices) CloudTrail() cloudtrailiface.CloudTrailAPI { return p.cloudtrail }
@@ -202,7 +199,7 @@ func New(spec *api.ProviderConfig, clusterSpec *api.ClusterConfig) (*ClusterProv
 			},
 		),
 	)
-	provider.iam = iam.New(s)
+
 	provider.cloudtrail = cloudtrail.New(s)
 	provider.cloudwatchlogs = cloudwatchlogs.New(s)
 
@@ -236,10 +233,6 @@ func New(spec *api.ProviderConfig, clusterSpec *api.ClusterConfig) (*ClusterProv
 	if endpoint, ok := os.LookupEnv("AWS_STS_ENDPOINT"); ok {
 		logger.Debug("Setting STS endpoint to %s", endpoint)
 		provider.sts = sts.New(s, s.Config.Copy().WithEndpoint(endpoint))
-	}
-	if endpoint, ok := os.LookupEnv("AWS_IAM_ENDPOINT"); ok {
-		logger.Debug("Setting IAM endpoint to %s", endpoint)
-		provider.iam = iam.New(s, s.Config.Copy().WithEndpoint(endpoint))
 	}
 	if endpoint, ok := os.LookupEnv("AWS_CLOUDTRAIL_ENDPOINT"); ok {
 		logger.Debug("Setting CloudTrail endpoint to %s", endpoint)

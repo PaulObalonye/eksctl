@@ -3,10 +3,6 @@ package mockprovider
 import (
 	"time"
 
-	"github.com/weaveworks/eksctl/pkg/awsapi"
-
-	"github.com/weaveworks/eksctl/pkg/eks/mocksv2"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/autoscaling/autoscalingiface"
@@ -15,18 +11,17 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs/cloudwatchlogsiface"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/aws/aws-sdk-go/service/eks/eksiface"
-	"github.com/aws/aws-sdk-go/service/iam/iamiface"
+
 	"github.com/aws/aws-sdk-go/service/sts/stsiface"
 
-	//"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/awstesting"
 
-	//"github.com/aws/aws-sdk-go/awstesting/unit"
-
 	api "github.com/weaveworks/eksctl/pkg/apis/eksctl.io/v1alpha5"
+	"github.com/weaveworks/eksctl/pkg/awsapi"
 	"github.com/weaveworks/eksctl/pkg/eks/mocks"
+	"github.com/weaveworks/eksctl/pkg/eks/mocksv2"
 )
 
 // ProviderConfig holds current global config
@@ -61,8 +56,6 @@ type MockProvider struct {
 	eks            *mocks.EKSAPI
 	ec2            *mocks.EC2API
 	sts            *mocks.STSAPI
-	ssm            *mocksv2.SSM
-	iam            *mocks.IAMAPI
 	cloudtrail     *mocks.CloudTrailAPI
 	cloudwatchlogs *mocks.CloudWatchLogsAPI
 	configProvider *mocks.ConfigProvider
@@ -71,6 +64,8 @@ type MockProvider struct {
 	cloudformationV2 *mocksv2.CloudFormation
 	elb              *mocksv2.ELB
 	elbV2            *mocksv2.ELBV2
+	ssm              *mocksv2.SSM
+	iam              *mocksv2.IAM
 }
 
 // NewMockProvider returns a new MockProvider
@@ -83,8 +78,6 @@ func NewMockProvider() *MockProvider {
 		eks:            &mocks.EKSAPI{},
 		ec2:            &mocks.EC2API{},
 		sts:            &mocks.STSAPI{},
-		ssm:            &mocksv2.SSM{},
-		iam:            &mocks.IAMAPI{},
 		cloudtrail:     &mocks.CloudTrailAPI{},
 		cloudwatchlogs: &mocks.CloudWatchLogsAPI{},
 		configProvider: &mocks.ConfigProvider{},
@@ -93,6 +86,8 @@ func NewMockProvider() *MockProvider {
 		cloudformationV2: &mocksv2.CloudFormation{},
 		elb:              &mocksv2.ELB{},
 		elbV2:            &mocksv2.ELBV2{},
+		ssm:              &mocksv2.SSM{},
+		iam:              &mocksv2.IAM{},
 	}
 }
 
@@ -179,10 +174,10 @@ func (m MockProvider) SSM() awsapi.SSM { return m.ssm }
 func (m MockProvider) MockSSM() *mocksv2.SSM { return m.ssm }
 
 // IAM returns a representation of the IAM API
-func (m MockProvider) IAM() iamiface.IAMAPI { return m.iam }
+func (m MockProvider) IAM() awsapi.IAM { return m.iam }
 
 // MockIAM returns a mocked IAM API
-func (m MockProvider) MockIAM() *mocks.IAMAPI { return m.IAM().(*mocks.IAMAPI) }
+func (m MockProvider) MockIAM() *mocksv2.IAM { return m.iam }
 
 // CloudTrail returns a representation of the CloudTrail API
 func (m MockProvider) CloudTrail() cloudtrailiface.CloudTrailAPI { return m.cloudtrail }

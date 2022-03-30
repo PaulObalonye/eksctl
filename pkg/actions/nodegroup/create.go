@@ -80,8 +80,6 @@ func (m *Manager) Create(ctx context.Context, options CreateOpts, nodegroupFilte
 		return err
 	}
 
-	ctx := context.TODO()
-
 	if !options.DryRun {
 		if err := m.init.Normalize(ctx, nodePools, cfg.Metadata); err != nil {
 			return err
@@ -178,7 +176,7 @@ func (m *Manager) nodeCreationTasks(ctx context.Context, supportsManagedNodes, i
 	allNodeGroupTasks := &tasks.TaskTree{
 		Parallel: true,
 	}
-	nodeGroupTasks := m.stackManager.NewUnmanagedNodeGroupTask(cfg.NodeGroups, !awsNodeUsesIRSA, vpcImporter)
+	nodeGroupTasks := m.stackManager.NewUnmanagedNodeGroupTask(ctx, cfg.NodeGroups, !awsNodeUsesIRSA, vpcImporter)
 	if nodeGroupTasks.Len() > 0 {
 		allNodeGroupTasks.Append(nodeGroupTasks)
 	}
